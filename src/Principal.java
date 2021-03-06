@@ -23,16 +23,7 @@ import java.util.Scanner;
 import java.util.ArrayList;
 
 import java.io.File;
-import java.io.BufferedWriter;
 import java.io.FileWriter;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 
 public class Principal {
 
@@ -45,25 +36,28 @@ public class Principal {
 		int eleccion = 0;
 		while(eleccion!=9) {
 			System.out.println("¿Qué acción desea realizar?\n");
-			System.out.println("\t1. Cargar una lista de la compra.");
-			System.out.println("\t2. Mostrar productos de la lista (Antes debe haber sido cargado un archivo).");
-			System.out.println("\t3. Modificar datos de los productos (Antes debe haber sido cargado un archivo).");
-			System.out.println("\t4. Añadir un nuevo producto (Antes debe haber sido cargado un archivo).");
-			System.out.println("\t5. Guardar modificaciones en una nueva lista (Antes debe haber sido cargado un archivo).");
+			System.out.println("\t1. Crear una nuevo lista de la compra.");
+			System.out.println("\t2. Cargar una lista de la compra.");
+			System.out.println("\t3. Mostrar productos de la lista (Antes debe haber sido cargado un archivo).");
+			System.out.println("\t4. Modificar datos de los productos (Antes debe haber sido cargado un archivo).");
+			System.out.println("\t5. Añadir un nuevo producto (Antes debe haber sido cargado un archivo).");
+			System.out.println("\t6. Guardar modificaciones en una nueva lista (Antes debe haber sido cargado un archivo).");
 			System.out.println("\t9. Finalizar programa.\n");
 			eleccion = sr.nextInt();
 			switch(eleccion) {
-				case 1: listaproductos = cargarArchivo();
+				case 1: nuevoArchivo();
 						break;
-				case 2: imprimeProductos(listaproductos);
+				case 2: listaproductos = cargarArchivo();
 						break;
-				case 3: modificaLista(listaproductos);
+				case 3: imprimeProductos(listaproductos);
 						break;
-				case 4: addToList(listaproductos);
-				break;
-				case 5: guardaArchivo(listaproductos);
+				case 4: modificaLista(listaproductos);
 						break;
-				case 7: System.out.println("Gracias por usar el gestor de listas de la compra. Hasta pronto.");
+				case 5: addToList(listaproductos);
+						break;
+				case 6: guardaArchivo(listaproductos);
+						break;
+				case 9: System.out.println("Gracias por usar el gestor de listas de la compra. Hasta pronto.");
 						break;
 				default: System.out.println("Acción invalida\n");
 			}
@@ -161,30 +155,6 @@ public class Principal {
 
 	}
 
-	/*Cuenta las lineas de un archivo*/
-	public static int cuentaLineas(String fichero) throws IOException {
-		
-		BufferedReader archivo = null;
-		int numeroLineas=0;
-		try {
-			FileReader lector = new FileReader(fichero);
-			archivo = new BufferedReader(lector);
-
-			String linea;
-			while ((linea = archivo.readLine()) != null) {
-				numeroLineas++;
-			}
-			
-		} finally {
-			if (archivo != null) {
-				archivo.close();
-			}
-		}
-		
-		return numeroLineas;
-		
-	} //end cuentaLineas
-
 	public static void modificaLista(ArrayList<Producto> lista) {
 		Scanner sr = new Scanner (System.in);
 		
@@ -256,7 +226,7 @@ public class Principal {
 	public static void modificaPrecio(ArrayList<Producto> lista, int numeroProducto) {
 		Scanner pt = new Scanner (System.in);
 		/*El usuario escribe el nuevo precio*/
-		System.out.println("\nEscribe el nuevo precio del producto.");	
+		System.out.println("\nEscribe el nuevo precio del producto (¡Separa los decimales con una coma!)");	
 		double precio = pt.nextDouble();
 		
 		lista.get(numeroProducto).setPrecio(precio);
@@ -340,11 +310,9 @@ public class Principal {
 
 	public static void guardaArchivo(ArrayList<Producto> lista) throws IOException {
 		
-		DataOutputStream salida = null;
-		
 		try {
 			Scanner sr = new Scanner(System.in);
-			System.out.println("\nPor favor, escriba el nombre del nuevo archivo.");
+			System.out.println("\nPor favor, escriba el nombre del nuevo archivo junto a la extensión .txt.");
 			String nombreArchivo = sr.nextLine();
 			
 			/*Creamos el archivo*/
@@ -357,23 +325,87 @@ public class Principal {
 				archivo.createNewFile();
 			}
 			
-			/*Especificamos qué archivo vamos a modificar con el filewriter*/
-			salida = new DataOutputStream (new FileOutputStream(archivo));
-			
-			
+			/*Especificamos qué archivo vamos a modificar con el filewriter y
+			Creamos un BufferWriter para escribir en el archivo*/
+			FileWriter fw = new FileWriter(archivo);
 			
 			for (int i=0; i < lista.size(); i++) {
-				salida.writeChars(lista.get(i).getNombreProducto()+",");
-				salida.writeChars(lista.get(i).getMarcaProducto()+",");
-				/*Hacemos un caster de precio ya que la clase writer solo acepta string e integer*/
-				salida.writeDouble(lista.get(i).getPrecio());
-				salida.writeChar(',');
-				salida.writeInt(lista.get(i).getCantidad());
-				salida.writeChars("\n");
+				fw.write(lista.get(i).getNombreProducto()+",");
+				fw.write(lista.get(i).getMarcaProducto()+",");
+				fw.write(lista.get(i).getPrecio()+",");			
+				fw.write(lista.get(i).getCantidad()+"\n");
 			}
 			
 			/*Cerramos el nuevo archivo creado*/
-			salida.close();
+			fw.close();
+			
+		} finally {
+			System.out.println("\nArchivo guardado.");
+		}
+		
+	}//end guardaarchivo
+	
+	public static void nuevoArchivo() throws IOException {
+		
+		try {
+			Scanner sr = new Scanner(System.in);
+			Scanner pt = new Scanner(System.in);
+			System.out.println("\nPor favor, escriba el nombre del nuevo archivo junto a la extensión .txt.");
+			String nombreArchivo = sr.nextLine();
+			
+			/*Creamos el archivo*/
+			
+			File archivo = new File(nombreArchivo);
+			
+			/*Comprobamos si ya había sido creado previamente dicho archivo. Si no, se crea*/
+			
+			if(!archivo.exists()) {
+				archivo.createNewFile();
+			} else {
+				System.out.println("Ya existe este archivo.\n");
+			}
+			
+			/*Especificamos qué archivo vamos a modificar con el filewriter y
+			Creamos un BufferWriter para escribir en el archivo*/
+			FileWriter fw = new FileWriter(archivo);
+			
+			
+			String decision = "Y";
+			String nombre, marca, precio, cantidad;
+			while(!decision.equals("N")) {
+				System.out.println("¿Desea añadir un producto? [Y/N]");
+				decision = sr.nextLine();
+				switch(decision) {
+					case "Y":
+						/*Nombre del producto*/
+						System.out.println("\nNombre del producto:");
+						nombre = pt.nextLine();
+						
+						/*Marca del producto*/
+						System.out.println("\nMarca del producto:");
+						marca = pt.nextLine();
+						
+						/*precio del producto*/
+						System.out.println("\nPrecio del producto (¡Los decimales separados por punto!):");
+						precio = pt.nextLine();
+						
+						/*Cantidad del producto*/
+						System.out.println("\nCantidad de producto:");
+						cantidad = pt.nextLine();
+						
+						fw.write(nombre+","+marca+","+precio+","+cantidad+"\n");
+						
+						break;
+						
+					case "N":
+							break; 
+					default: System.out.println("Comando invalido");
+				}
+				
+			}
+			
+			/*Cerramos el nuevo archivo creado*/
+			fw.close();
 			
 		} finally {
 			System.out.println("\nArchivo guardado.");
