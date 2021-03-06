@@ -1,0 +1,10 @@
+Aceite,Oloestepa,1.75,3
+Fanta Naranja,Coca-Cola Company,1.80,2
+Saco Cebolla,Hrms. Gómez,0.89,1
+Bollitos de Pan,Hacendado,0.60,10
+Crema de cacahuete, Hacendado,1.20,1
+Aceitunas,Antequerana,1.99,2
+Lejía,Bosque Verde,1.75,2
+Papel Higiénico,Bosque Verde,0.70,2
+Espinacas Baby,Hacendado,0.50,1
+Botella de Agua,Bezolla,3,1

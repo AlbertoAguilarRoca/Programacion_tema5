@@ -47,7 +47,7 @@ public class Producto {
 		this.cantidad = cantidad;
 	}
 	
-	public double getCantidad() {
+	public int getCantidad() {
 		return cantidad;
 	}
 	
