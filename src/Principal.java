@@ -7,30 +7,50 @@
  ---------------------
  * Bibliografía:
  ---------------------
-* https://www.discoduroderoer.es/clases-filereader-y-filewriter-para-ficheros-de-texto-en-java/
-* http://lineadecodigo.com/java/numero-de-lineas-de-un-fichero/ 
+* https://www.discoduroderoer.es/clases-filereader-y-filewriter-para-ficheros-de-texto-en-java/ -- Info acerca de la lectura y escritura de archivos
+* http://lineadecodigo.com/java/numero-de-lineas-de-un-fichero/ -- Contar el número de lineas de un fichero
+* https://www.w3schools.com/java/java_arraylist.asp -- Cómo funcionan los arraylist
+* https://decodigo.com/java-crear-archivos-de-texto -- Crear archivos de texto y escribir en ellos
+* https://es.stackoverflow.com/questions/29408/como-limitar-la-cantidad-de-decimales-de-un-double/29410 --Limitar el número de decimales a dos
  */
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Scanner;
+import java.util.ArrayList;
+
+import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 public class Principal {
 
 	public static void main(String[] args) throws IOException {
 		
 		/*Inicializamos el array con la lista de productos*/
-		Producto[] listaproductos = null;
+		ArrayList<Producto> listaproductos = new ArrayList<Producto>();
 		
 		Scanner sr = new Scanner (System.in);
 		int eleccion = 0;
-		while(eleccion!=7) {
+		while(eleccion!=9) {
 			System.out.println("¿Qué acción desea realizar?\n");
 			System.out.println("\t1. Cargar una lista de la compra.");
 			System.out.println("\t2. Mostrar productos de la lista (Antes debe haber sido cargado un archivo).");
-			System.out.println("\t3. Modificar datos de los productos (Antes debe haber sido cargado un archivo).\n");
+			System.out.println("\t3. Modificar datos de los productos (Antes debe haber sido cargado un archivo).");
+			System.out.println("\t4. Añadir un nuevo producto (Antes debe haber sido cargado un archivo).");
+			System.out.println("\t5. Guardar modificaciones en una nueva lista (Antes debe haber sido cargado un archivo).");
+			System.out.println("\t9. Finalizar programa.\n");
 			eleccion = sr.nextInt();
 			switch(eleccion) {
 				case 1: listaproductos = cargarArchivo();
@@ -38,6 +58,10 @@ public class Principal {
 				case 2: imprimeProductos(listaproductos);
 						break;
 				case 3: modificaLista(listaproductos);
+						break;
+				case 4: addToList(listaproductos);
+				break;
+				case 5: guardaArchivo(listaproductos);
 						break;
 				case 7: System.out.println("Gracias por usar el gestor de listas de la compra. Hasta pronto.");
 						break;
@@ -48,7 +72,7 @@ public class Principal {
 	}// end main
 
 	/* Funcion para cargar un archivo */
-	public static Producto[] cargarArchivo() throws IOException  {
+	public static ArrayList<Producto> cargarArchivo() throws IOException  {
 
 		/* Iniciamos el Buffer de entrada de datos */
 		BufferedReader entrada = null;
@@ -58,18 +82,14 @@ public class Principal {
 			System.out.println("\nEscribe el nombre de la lista de la compra (incluye la extension).");
 			Scanner sc = new Scanner(System.in);
 			String archivo = sc.nextLine();
-			
-			/*Contamos cuantas lineas tiene el archivo que nos pasa el usuario con 
-			 * la función cuentalineas*/
-			final int NUMERO_PRODUCTO = cuentaLineas(archivo);
 
 			FileReader lector = new FileReader(archivo.trim());/*Añadimos trim por si el usuario inserta algún espacio*/
 			entrada = new BufferedReader(lector);
 
 			/* Leemos linea a linea (Parsear) */
 			String linea;
-			Producto[] listaproductos = new Producto[NUMERO_PRODUCTO];
-			int j = 0;
+			ArrayList<Producto> listaproductos = new ArrayList<Producto>();
+			
 			while ((linea = entrada.readLine()) != null) {
 				// Vamos añadiendo la info a variables individuales
 
@@ -99,8 +119,8 @@ public class Principal {
 				}
 
 				// introducimos todos los datos de un producto en un nuevo objeto
-				listaproductos[j] = new Producto(nombreProducto, marca, Double.parseDouble(precio), Integer.parseInt(cantidad));
-				j++;
+				Producto producto = new Producto(nombreProducto, marca, Double.parseDouble(precio), Integer.parseInt(cantidad));
+				listaproductos.add(producto);
 			} // end while
 			
 			return listaproductos;
@@ -113,17 +133,31 @@ public class Principal {
 		} finally {
 			if (entrada != null) {
 				System.out.println("\nCarga finalizada.\n");
-				//entrada.close();
+				entrada.close();
 			}			
 		}
 	}// end cargar archivo
 	
 	/*Funcion para imprimir productos*/
-	public static void imprimeProductos(Producto[] lista) {
+	public static void imprimeProductos(ArrayList<Producto> lista) {
 		/*Buble for para mostrar los productos con un numero delante*/
-		for (int i = 0; i < lista.length; i++) {
-			System.out.println("- "+(i+1)+". "+lista[i].toString());
+		for (int i = 0; i < lista.size(); i++) {
+			System.out.println("- "+(i+1)+". "+lista.get(i).toString());
 		}
+		
+		double total = 0;
+		
+		for (int i = 0; i < lista.size(); i++) {
+			double precio = lista.get(i).getPrecio() * lista.get(i).getCantidad();
+			total += precio;
+		}
+		
+		/*Clase para limitar el número de decimales a dos*/
+		DecimalFormat decimal = new DecimalFormat("#.00");
+		
+		System.out.println("\n----------------------------------------");
+		System.out.println("El coste total de la lista es: "+decimal.format(total)+" €");
+		System.out.println("----------------------------------------\n");
 
 	}
 
@@ -151,190 +185,200 @@ public class Principal {
 		
 	} //end cuentaLineas
 
-	public static void modificaLista(Producto[] lista) {
+	public static void modificaLista(ArrayList<Producto> lista) {
 		Scanner sr = new Scanner (System.in);
-
-		System.out.println("\n¿Qué acción desea realizar?\n");
-		System.out.println("\t1. Modificar un producto");
-		System.out.println("\t2. Modificar una marca");
-		System.out.println("\t3. Modificar un precio");
-		System.out.println("\t4. Modificar una cantidad");
-		System.out.println("\t5. Modificar todo el producto\n");
+		
+		/*Imprime la lista de nuevo, por si el usuario no la ha cargado previamente*/
+		imprimeProductos(lista);
+		/*El usuario selecciona qué producto quiere modificar*/
+		System.out.println("\n¿Qué producto quieres modificar? (Selecciones un número)");
+		int numeroProducto = sr.nextInt() - 1;//Restamos uno para que concuerde con el array
+		
+		/*En caso de que el usuario escriba un numero mayor al total del array, deberá escribirlo de nuevo*/
+		if(numeroProducto > lista.size()-1) {
+			while(numeroProducto > lista.size()-1) {
+				System.out.println("\nEl número debe ser menor al último número de la lista. Por favor, vuelve a introducirlo.");
+				numeroProducto = sr.nextInt() - 1;
+			}
+		}
+		
+		/*El usuario indica lo que quiere hacer con el producto seleccionado*/
+		System.out.println("\n¿Qué quiere hacer con el producto?\n");
+		System.out.println("\t1. Modificar el nombre");
+		System.out.println("\t2. Modificar la marca");
+		System.out.println("\t3. Modificar el precio");
+		System.out.println("\t4. Modificar la cantidad");
+		System.out.println("\t5. Modificar todo el producto");
+		System.out.println("\t6. Eliminar el producto\n");
 		int eleccion = sr.nextInt();
 		switch(eleccion) {
-			case 1: modificaNombre(lista);
+			case 1: modificaNombre(lista, numeroProducto);
 					break;
-			case 2: modificaMarca(lista);
+			case 2: modificaMarca(lista, numeroProducto);
 					break;
-			case 3: modificaPrecio(lista);
+			case 3: modificaPrecio(lista, numeroProducto);
 					break;
-			case 4: modificaCantidad(lista);
+			case 4: modificaCantidad(lista, numeroProducto);
 					break;
-			case 5: modificaProducto(lista);
+			case 5: modificaProducto(lista, numeroProducto);
 					break;
+			case 6: eliminaProducto(lista, numeroProducto);
+			break;
 			default: System.out.println("Acción invalida\n");
 		}
 	}// end modificalista
 	
-	public static void modificaNombre(Producto[] lista) {
-		/*Imprime la lista de nuevo, por si el usuario no la ha cargado previamente*/
-		imprimeProductos(lista);
-		System.out.println("\n¿Qué producto quieres modificar? (Selecciones un número)");
-		Scanner sr = new Scanner(System.in);
-		Scanner pt = new Scanner(System.in);
-		int numeroProducto = sr.nextInt() - 1;//Restamos uno para que concuerde con el array
+	public static void modificaNombre(ArrayList<Producto> lista, int numeroProducto) {
 		
-		/*En caso de que el usuario escriba un numero mayor al total del array*/
-		if(numeroProducto > lista.length) {
-			while(numeroProducto > lista.length) {
-				System.out.println("\nEl número debe ser menor al último número de la lista. Por favor, vuelve a introducirlo.");
-				numeroProducto = sr.nextInt() - 1;
-			}
-		}
-		
-		System.out.println("El valor del numero es: "+numeroProducto);
-		
-		System.out.println("\nEscribe el nuevo nombre del producto.");
-		
+		Scanner pt = new Scanner (System.in);
+		/*El usuario escribe el nuevo producto*/
+		System.out.println("\nEscribe el nuevo nombre del producto.");	
 		String producto = pt.nextLine();
 		
-		lista[numeroProducto].setNombreProducto(producto.trim());
+		lista.get(numeroProducto).setNombreProducto(producto.trim());
 		
-		System.out.println("\nEl producto ha sido modificado -> "+lista[numeroProducto].getNombreProducto());
+		System.out.println("\nEl producto ha sido modificado -> "+lista.get(numeroProducto).getNombreProducto());
 		
 	}//end modificaNombre
 	
-	public static void modificaMarca(Producto[] lista) {
-		/*Imprime la lista de nuevo, por si el usuario no la ha cargado previamente*/
-		imprimeProductos(lista);
-		System.out.println("\n¿Qué producto quieres modificar? (Selecciones un número)");
-		Scanner sr = new Scanner(System.in);
-		Scanner pt = new Scanner(System.in);
-		int numeroProducto = sr.nextInt()- 1; //Restamos uno para que concuerde con el array
-		
-		/*En caso de que el usuario escriba un numero mayor al total del array*/
-		if(numeroProducto > lista.length) {
-			while(numeroProducto > lista.length) {
-				System.out.println("\nEl número debe ser menor al último número de la lista. Por favor, vuelve a introducirlo.");
-				numeroProducto = sr.nextInt() - 1;
-			}
-		}
-		
-		System.out.println("\nEscribe la nueva marca del producto.");
-		
+	public static void modificaMarca(ArrayList<Producto> lista, int numeroProducto) {
+		Scanner pt = new Scanner (System.in);
+		/*El usuario escribe la nueva marca del producto*/
+		System.out.println("\nEscribe la nueva marca del producto.");	
 		String producto = pt.nextLine();
 		
-		lista[numeroProducto].setMarcaProducto(producto.trim());
+		lista.get(numeroProducto).setMarcaProducto(producto.trim());
 		
-		System.out.println("\nEl producto ha sido modificado -> "+lista[numeroProducto].getMarcaProducto());
+		System.out.println("\nEl producto ha sido modificado -> "+lista.get(numeroProducto).getMarcaProducto());
 		
 	}//end modificaMarca
 	
-	public static void modificaPrecio(Producto[] lista) {
-		/*Imprime la lista de nuevo, por si el usuario no la ha cargado previamente*/
-		imprimeProductos(lista);
-		System.out.println("\n¿Qué producto quieres modificar? (Selecciones un número)");
-		Scanner sr = new Scanner(System.in);
-		Scanner pt = new Scanner(System.in);
+	public static void modificaPrecio(ArrayList<Producto> lista, int numeroProducto) {
+		Scanner pt = new Scanner (System.in);
+		/*El usuario escribe el nuevo precio*/
+		System.out.println("\nEscribe el nuevo precio del producto.");	
+		double precio = pt.nextDouble();
 		
-		int numeroProducto = sr.nextInt() - 1;
+		lista.get(numeroProducto).setPrecio(precio);
 		
-		/*En caso de que el usuario escriba un numero mayor al total del array*/
-		if(numeroProducto > lista.length) {
-			while(numeroProducto > lista.length) {
-				System.out.println("\nEl número debe ser menor al último número de la lista. Por favor, vuelve a introducirlo.");
-				numeroProducto = sr.nextInt() - 1;
-			}
-		}
-		
-		System.out.println("\nEscribe el nuevo precio del producto.");
-		
-		double producto = pt.nextDouble();
-		
-		lista[numeroProducto].setPrecio(producto);
-		
-		System.out.println("\nEl producto ha sido modificado -> "+lista[numeroProducto].getPrecio());
+		System.out.println("\nEl producto ha sido modificado -> "+lista.get(numeroProducto).getPrecio());
 		
 	}//end modificaPrecio
 	
-	public static void modificaCantidad(Producto[] lista) {
-		/*Imprime la lista de nuevo, por si el usuario no la ha cargado previamente*/
-		imprimeProductos(lista);
-		System.out.println("\n¿Qué producto quieres modificar? (Selecciones un número)");
-		Scanner sr = new Scanner(System.in);
-		Scanner pt = new Scanner(System.in);
-		int numeroProducto = sr.nextInt()-1;
+	public static void modificaCantidad(ArrayList<Producto> lista, int numeroProducto) {
+		Scanner pt = new Scanner (System.in);
+		/*El usuario escribe la nueva cantidad de producto*/
+		System.out.println("\nEscribe la nueva cantidad del producto.");	
+		int cantidad = pt.nextInt();
 		
-		/*En caso de que el usuario escriba un numero mayor al total del array*/
-		if(numeroProducto > lista.length) {
-			while(numeroProducto > lista.length) {
-				System.out.println("\nEl número debe ser menor al último número de la lista. Por favor, vuelve a introducirlo.");
-				numeroProducto = sr.nextInt() - 1;
-			}
-		}
+		lista.get(numeroProducto).setCantidad(cantidad);
 		
-		System.out.println("\nEscribe la nueva cantidad del producto.");
-		
-		int producto = pt.nextInt();
-		
-		lista[numeroProducto].setCantidad(producto);
-		
-		System.out.println("\nEl producto ha sido modificado -> "+lista[numeroProducto].getCantidad());
+		System.out.println("\nEl producto ha sido modificado -> "+lista.get(numeroProducto).getCantidad());
 		
 	}//end modificaCantidad
 	
-	public static void modificaProducto(Producto[] lista) {
-		/*Imprime la lista de nuevo, por si el usuario no la ha cargado previamente*/
-		imprimeProductos(lista);
-		System.out.println("\n¿Qué producto quieres modificar? (Selecciones un número)");
-		Scanner sr = new Scanner(System.in);
-		Scanner pt = new Scanner(System.in);
-		int numeroProducto = sr.nextInt()-1;
-		
-		/*En caso de que el usuario escriba un numero mayor al total del array*/
-		if(numeroProducto > lista.length) {
-			while(numeroProducto > lista.length) {
-				System.out.println("\nEl número debe ser menor al último número de la lista. Por favor, vuelve a introducirlo.");
-				numeroProducto = sr.nextInt() - 1;
-			}
-		}
-		
+	public static void modificaProducto(ArrayList<Producto> lista, int numeroProducto) {
+
 		/*MODIFICAMOS EL NOMBRE*/
 		
-		System.out.println("\nEscribe el nuevo nombre del producto.");
-		
-		String nombreproducto = pt.nextLine();
-		
-		lista[numeroProducto].setNombreProducto(nombreproducto);
+		modificaNombre(lista, numeroProducto);
 		
 		/*MODIFICAMOS LA MARCA*/
 		
-		System.out.println("\nEscribe la nueva marca del producto.");
-		
-		String marcaproducto = pt.nextLine();
-		
-		lista[numeroProducto].setMarcaProducto(marcaproducto);
+		modificaMarca(lista, numeroProducto);
 		
 		/*MODIFICAMOS EL PRECIO*/
 		
-		System.out.println("\nEscribe el nuevo precio del producto.");
-		
-		double precioproducto = pt.nextDouble();
-		
-		lista[numeroProducto].setPrecio(precioproducto);
+		modificaPrecio(lista, numeroProducto);
 		
 		/*MODIFICAMOS LA CANTIDAD*/
 		
-		System.out.println("\nEscribe la nueva cantidad del producto.");
-		
-		int cantidadproducto = pt.nextInt();
-		
-		lista[numeroProducto].setCantidad(cantidadproducto);
+		modificaCantidad(lista, numeroProducto);
 		
 		/*Lo imprimimos*/
 		
-		System.out.println("\nEl producto ha sido modificado -> "+lista[numeroProducto].toString());
+		System.out.println("\nEl producto ha sido modificado -> "+lista.get(numeroProducto).toString());
 		
 	}//end modificaCantidad
+
+	public static void eliminaProducto(ArrayList<Producto> lista, int numeroProducto) {
+
+		/*Primero mostramos el producto que se elimina*/
+		System.out.println("\nEl producto ha sido eliminado -> "+lista.get(numeroProducto).toString());
+		/*Después lo borramos*/
+		lista.remove(numeroProducto);
+	}//end eliminaProductos
+	
+	public static void addToList(ArrayList<Producto> lista) {
+		Scanner sr = new Scanner(System.in);
+		/*El usuario escribe el nombre del producto*/
+		System.out.println("\nEscriba el nombre del producto.\n");
+		
+		String nombre = sr.nextLine();
+		
+		/*El usuario escribe la marca del producto*/
+		System.out.println("\nEscriba la marca del producto.\n");
+		
+		String marca = sr.nextLine();
+		
+		/*El usuario escribe el precio del producto*/
+		System.out.println("\nEscriba el precio del producto.\n");
+		
+		double precio = sr.nextDouble();
+		
+		/*El usuario escribe la cantidad del producto*/
+		System.out.println("\nEscriba la cantidad del producto.\n");
+		
+		int cantidad = sr.nextInt();
+		
+		Producto nuevoProducto = new Producto(nombre.trim(), marca.trim(), precio, cantidad);
+		
+		lista.add(nuevoProducto);
+
+		System.out.println("\nEl producto ha sido añadido.\n");
+	}
+
+	public static void guardaArchivo(ArrayList<Producto> lista) throws IOException {
+		
+		DataOutputStream salida = null;
+		
+		try {
+			Scanner sr = new Scanner(System.in);
+			System.out.println("\nPor favor, escriba el nombre del nuevo archivo.");
+			String nombreArchivo = sr.nextLine();
+			
+			/*Creamos el archivo*/
+			
+			File archivo = new File(nombreArchivo);
+			
+			/*Comprobamos si ya había sido creado previamente dicho archivo. Si no, se crea*/
+			
+			if(!archivo.exists()) {
+				archivo.createNewFile();
+			}
+			
+			/*Especificamos qué archivo vamos a modificar con el filewriter*/
+			salida = new DataOutputStream (new FileOutputStream(archivo));
+			
+			
+			
+			for (int i=0; i < lista.size(); i++) {
+				salida.writeChars(lista.get(i).getNombreProducto()+",");
+				salida.writeChars(lista.get(i).getMarcaProducto()+",");
+				/*Hacemos un caster de precio ya que la clase writer solo acepta string e integer*/
+				salida.writeDouble(lista.get(i).getPrecio());
+				salida.writeChar(',');
+				salida.writeInt(lista.get(i).getCantidad());
+				salida.writeChars("\n");
+			}
+			
+			/*Cerramos el nuevo archivo creado*/
+			salida.close();
+			
+		} finally {
+			System.out.println("\nArchivo guardado.");
+		}
+		
+	}//end guardaarchivo
 	
 }// end class
