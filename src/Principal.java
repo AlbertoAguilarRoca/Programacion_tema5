@@ -8,10 +8,11 @@
  * Bibliografía:
  ---------------------
 * https://www.discoduroderoer.es/clases-filereader-y-filewriter-para-ficheros-de-texto-en-java/ -- Info acerca de la lectura y escritura de archivos
-* http://lineadecodigo.com/java/numero-de-lineas-de-un-fichero/ -- Contar el número de lineas de un fichero
+* http://lineadecodigo.com/java/numero-de-lineas-de-un-fichero/ -- Contar el número de lineas de un fichero 
 * https://www.w3schools.com/java/java_arraylist.asp -- Cómo funcionan los arraylist
 * https://decodigo.com/java-crear-archivos-de-texto -- Crear archivos de texto y escribir en ellos
 * https://es.stackoverflow.com/questions/29408/como-limitar-la-cantidad-de-decimales-de-un-double/29410 --Limitar el número de decimales a dos
+* https://www.campusmvp.es/recursos/post/java-como-listar-filtrar-y-obtener-informacion-de-carpetas-y-archivos.aspx -- Mostrar los archivos de una carpeta
  */
 
 import java.io.BufferedReader;
@@ -21,7 +22,6 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Scanner;
 import java.util.ArrayList;
-
 import java.io.File;
 import java.io.FileWriter;
 
@@ -36,7 +36,7 @@ public class Principal {
 		int eleccion = 0;
 		while(eleccion!=9) {
 			System.out.println("¿Qué acción desea realizar?\n");
-			System.out.println("\t1. Crear una nuevo lista de la compra.");
+			System.out.println("\t1. Crear una nueva lista de la compra.");
 			System.out.println("\t2. Cargar una lista de la compra.");
 			System.out.println("\t3. Mostrar productos de la lista (Antes debe haber sido cargado un archivo).");
 			System.out.println("\t4. Modificar datos de los productos (Antes debe haber sido cargado un archivo).");
@@ -47,7 +47,7 @@ public class Principal {
 			switch(eleccion) {
 				case 1: nuevoArchivo();
 						break;
-				case 2: listaproductos = cargarArchivo();
+				case 2: listaproductos = cargarArchivo(); //guardamos el arraylist en memoria para poder usarlo en el resto de funciones
 						break;
 				case 3: imprimeProductos(listaproductos);
 						break;
@@ -72,11 +72,13 @@ public class Principal {
 		BufferedReader entrada = null;
 
 		try {
-			/* Creamos un manejador (handle) de ficheros de lectura */
+			/*Mostramos al usuario los archivos que hay disponibles para cargar*/
+			mostrarArchivos();
+			
 			System.out.println("\nEscribe el nombre de la lista de la compra (incluye la extension).");
 			Scanner sc = new Scanner(System.in);
 			String archivo = sc.nextLine();
-
+			/* Creamos un manejador (handle) de ficheros de lectura */
 			FileReader lector = new FileReader(archivo.trim());/*Añadimos trim por si el usuario inserta algún espacio*/
 			entrada = new BufferedReader(lector);
 
@@ -131,6 +133,39 @@ public class Principal {
 			}			
 		}
 	}// end cargar archivo
+	
+	/*función para mostrar los archivos que hay en la carpeta*/
+	public static void mostrarArchivos() {
+	     try {
+	    	 
+	 		/*Obtenemos la ubicación de la carpeta*/
+	    	 
+	       String sCarpAct = System.getProperty("user.dir");
+	       File carpeta = new File(sCarpAct);
+	       /*El metodo list permitirá mostrar todos los archivos de la carpeta*/
+	       String[] listado = carpeta.list();
+	       
+	       /*En caso de que no haya archivos .txt, mostrará el siguiente mensaje*/
+	       if (listado == null || listado.length == 0) {
+	           System.out.println("No hay listas de la compra dentro de la carpeta actual");
+	           return;
+	       }
+	       else {
+	    	   System.out.println("Listas de la compra disponibles para cargar:\n");
+	           for (int i=0; i< listado.length; i++) {
+	        	   /*Solo mostramos los archivos .txt*/
+	               if (listado[i].contains(".txt")) {	            	   
+	            	   System.out.println(listado[i]);	            	   
+	               }     
+	           }
+	           System.out.println("\n-------------------");
+	       }
+	       
+	       } catch(Exception e) {
+	       e.printStackTrace();
+	       }
+	  
+	}//end mostrarArchivos
 	
 	/*Funcion para imprimir productos*/
 	public static void imprimeProductos(ArrayList<Producto> lista) {
@@ -249,19 +284,19 @@ public class Principal {
 	
 	public static void modificaProducto(ArrayList<Producto> lista, int numeroProducto) {
 
-		/*MODIFICAMOS EL NOMBRE*/
+		/*modificamos el nombre*/
 		
 		modificaNombre(lista, numeroProducto);
 		
-		/*MODIFICAMOS LA MARCA*/
+		/*modificamos la marca*/
 		
 		modificaMarca(lista, numeroProducto);
 		
-		/*MODIFICAMOS EL PRECIO*/
+		/*modificamos el precio*/
 		
 		modificaPrecio(lista, numeroProducto);
 		
-		/*MODIFICAMOS LA CANTIDAD*/
+		/*modificamos la cantidad*/
 		
 		modificaCantidad(lista, numeroProducto);
 		
@@ -362,11 +397,11 @@ public class Principal {
 			if(!archivo.exists()) {
 				archivo.createNewFile();
 			} else {
-				System.out.println("Ya existe este archivo.\n");
+				System.out.println("Hemos sobreescrito el archivo.\n");
 			}
 			
-			/*Especificamos qué archivo vamos a modificar con el filewriter y
-			Creamos un BufferWriter para escribir en el archivo*/
+			/*Especificamos qué archivo vamos a modificar con el filewriter
+			para escribir en el archivo*/
 			FileWriter fw = new FileWriter(archivo);
 			
 			
@@ -375,7 +410,7 @@ public class Principal {
 			while(!decision.equals("N")) {
 				System.out.println("¿Desea añadir un producto? [Y/N]");
 				decision = sr.nextLine();
-				switch(decision) {
+				switch(decision.toUpperCase()) {
 					case "Y":
 						/*Nombre del producto*/
 						System.out.println("\nNombre del producto:");
